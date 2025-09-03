@@ -40,7 +40,6 @@
             -moz-appearance: textfield;
         }
 
-        /* [START] CSS FOR MOBILE RESPONSIVE TABLE */
         @media screen and (max-width: 639px) {
             #participantsTable thead {
                 display: none;
@@ -91,7 +90,6 @@
                 display: none;
             }
         }
-        /* [END] CSS FOR MOBILE RESPONSIVE TABLE */
     </style>
 </head>
 <body class="p-4 sm:p-6 md:p-8 flex items-center justify-center min-h-screen">
@@ -276,9 +274,7 @@
             row.className = 'sm:hover:bg-cyan-100 transition duration-150 sm:even:bg-cyan-50';
 
             const nameCell = row.insertCell();
-            // [START] Add data-label for mobile view
             nameCell.setAttribute('data-label', 'Name:');
-            // [END] Add data-label for mobile view
             const nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.value = name;
@@ -299,9 +295,7 @@
             nameCell.appendChild(nameInput);
 
             const drinkCostCell = row.insertCell();
-            // [START] Add data-label for mobile view
             drinkCostCell.setAttribute('data-label', 'Drink Cost (KIP):');
-            // [END] Add data-label for mobile view
             const drinkCostInput = document.createElement('input');
             drinkCostInput.type = 'text'; 
             drinkCostInput.value = formatNumber(drinkCost);
@@ -326,16 +320,12 @@
             drinkCostCell.appendChild(drinkCostInput);
 
             const sharedCostCell = row.insertCell();
-            // [START] Add data-label for mobile view
             sharedCostCell.setAttribute('data-label', 'Shared Cost (KIP):');
-            // [END] Add data-label for mobile view
             sharedCostCell.className = 'font-medium text-gray-600 text-right text-base align-middle';
             sharedCostCell.textContent = '0';
 
             const totalDueCell = row.insertCell();
-            // [START] Add data-label for mobile view
             totalDueCell.setAttribute('data-label', 'Total Due (KIP):');
-            // [END] Add data-label for mobile view
             totalDueCell.className = 'font-bold text-cyan-700 text-right text-base align-middle';
             totalDueCell.textContent = '0';
 
@@ -585,29 +575,31 @@
                 document.body.removeChild(link);
             } else if (format === 'pdf') {
                 const imgData = canvas.toDataURL('image/png');
+                
+                // [START] UPDATED PDF EXPORT LOGIC FOR A4, PORTRAIT, FIT-ONE-PAGE
                 const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
                 
-                const imgProps = pdf.getImageProperties(imgData);
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
-                const margin = 10;
-                
-                const usableWidth = pdfWidth - margin * 2;
-                const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
-                const usableHeight = pdfHeight - margin * 2;
-                
-                let heightLeft = imgHeight;
-                let position = 0;
+                const imgProps = pdf.getImageProperties(imgData);
+                const imgWidth = imgProps.width;
+                const imgHeight = imgProps.height;
+                const ratio = imgWidth / imgHeight;
 
-                pdf.addImage(imgData, 'PNG', margin, margin, usableWidth, imgHeight);
-                heightLeft -= usableHeight;
+                let finalWidth = pdfWidth;
+                let finalHeight = pdfWidth / ratio;
 
-                while (heightLeft > 0) {
-                    position -= usableHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', margin, position + margin, usableWidth, imgHeight);
-                    heightLeft -= usableHeight;
+                if (finalHeight > pdfHeight) {
+                    finalHeight = pdfHeight;
+                    finalWidth = pdfHeight * ratio;
                 }
+
+                const x = (pdfWidth - finalWidth) / 2;
+                const y = (pdfHeight - finalHeight) / 2;
+                
+                pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                // [END] UPDATED PDF EXPORT LOGIC
+                
                 pdf.save(`${filename}.pdf`);
             }
         }
@@ -635,5 +627,4 @@
         };
     </script>
 </body>
-
 </html>
